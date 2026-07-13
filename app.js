@@ -20,6 +20,10 @@ app.set('views',path.join(__dirname,'views'))
 
 app.use(express.urlencoded({extended: true}))
 app.use(methodOverride('_method'))
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
+app.use('/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/js')));
 
 app.get('/',(req,res)=>{
     res.render('home' )
@@ -41,9 +45,15 @@ app.get('/campgrounds/new',(req,res) => {
 })
 
 app.post('/campgrounds',async (req,res) => {
-    const campground=new CampGround(req.body.campground)
-    await campground.save()
-    res.redirect(`/campgrounds/${campground._id}`)
+    try{
+        const campground=new CampGround(req.body.campground)
+        await campground.save()
+        res.redirect(`/campgrounds/${campground._id}`)
+    }
+    catch (err){
+        next(err)
+    }
+    
 })
 
 app.get('/campgrounds/:id', async (req,res) => {
@@ -66,6 +76,10 @@ app.delete('/campgrounds/:id',async (req,res) => {
     const {id} = req.params
     await CampGround.findByIdAndDelete(id)
     res.redirect('/campgrounds')
+})
+
+app.use((err,req,res,next) => {
+    res.send("Ouch! Something went wrong!")
 })
 app.listen(3000,() => {
     console.log("serving on port 3000")
